@@ -16,15 +16,19 @@ type Interface interface {
 	//will be run repeatedly and forever. It is up the
 	//implementation to throttle the fetch frequency.
 	Fetch() (io.Reader, error)
+
+	//cleanup
+	Clean()
 }
 
 // Func converts a fetch function into the fetcher interface
-func Func(fn func() (io.Reader, error)) Interface {
-	return &fetcher{fn}
+func Func(fn func() (io.Reader, error), cl func()) Interface {
+	return &fetcher{fn, cl}
 }
 
 type fetcher struct {
 	fn func() (io.Reader, error)
+	cl func()
 }
 
 func (f fetcher) Init() error {
@@ -33,4 +37,8 @@ func (f fetcher) Init() error {
 
 func (f fetcher) Fetch() (io.Reader, error) {
 	return f.fn()
+}
+
+func (f fetcher) Clean() {
+	f.cl()
 }

@@ -201,6 +201,8 @@ func (mp *master) fetch() {
 		mp.debugf("checking for updates...")
 	}
 	reader, err := mp.Fetcher.Fetch()
+	defer mp.Fetcher.Clean()
+
 	if err != nil {
 		mp.debugf("failed to get latest version: %s", err)
 		return
@@ -287,6 +289,9 @@ func (mp *master) fetch() {
 		mp.warnf("failed to run temp binary: %s (%s) output \"%s\"", err, tmpBinPath, tokenOut)
 		return
 	}
+
+	fmt.Printf("TokenIn %s tokenOut %s\n", string(tokenIn), string(tokenOut))
+
 	if tokenIn != string(tokenOut) {
 		mp.warnf("sanity check failed")
 		return

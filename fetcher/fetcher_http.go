@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/frame/g"
 )
 
 //HTTP fetcher uses HEAD requests to poll the status of a given
@@ -20,6 +22,8 @@ type HTTP struct {
 	//internal state
 	delay bool
 	lasts map[string]string
+
+	resp *http.Response
 }
 
 //if any of these change, the binary has been updated
@@ -51,10 +55,12 @@ func (h *HTTP) Fetch() (io.Reader, error) {
 	//status check using HEAD
 	resp, err := http.Head(h.URL)
 	if err != nil {
+		g.Log().Errorf("HEAD request failed (%s)", err)
 		return nil, fmt.Errorf("HEAD request failed (%s)", err)
 	}
 	resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
+		g.Log().Errorf("HEAD request failed (status code %d)", resp.StatusCode)
 		return nil, fmt.Errorf("HEAD request failed (status code %d)", resp.StatusCode)
 	}
 	//if all headers match, skip update
@@ -69,14 +75,19 @@ func (h *HTTP) Fetch() (io.Reader, error) {
 		}
 	}
 	if matches == total {
+		g.Log().Infof("Skip file match.")
 		return nil, nil //skip, file match
 	}
 	//binary fetch using GET
 	resp, err = http.Get(h.URL)
+	h.resp = resp
+
 	if err != nil {
+		g.Log().Errorf("GET request failed (%s)", err)
 		return nil, fmt.Errorf("GET request failed (%s)", err)
 	}
 	if resp.StatusCode != http.StatusOK {
+		g.Log().Errorf("GET request failed (status code %d)", resp.StatusCode)
 		return nil, fmt.Errorf("GET request failed (status code %d)", resp.StatusCode)
 	}
 	//extract gz files
@@ -85,4 +96,10 @@ func (h *HTTP) Fetch() (io.Reader, error) {
 	}
 	//success!
 	return resp.Body, nil
+}
+
+func (h *HTTP) Clean() {
+	if h.resp != nil {
+		http.DefaultClient.CloseIdleConnections()
+	}
 }

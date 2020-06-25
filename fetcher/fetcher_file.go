@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 	"time"
+
+	"github.com/gogf/gf/frame/g"
 )
 
 // File checks the provided Path, at the provided
@@ -43,15 +45,18 @@ func (f *File) Fetch() (io.Reader, error) {
 	f.delay = true
 	lastHash := f.hash
 	if err := f.updateHash(); err != nil {
+		g.Log().Errorf("return updateHash Error %v\n", err)
 		return nil, err
 	}
 	// no change
 	if lastHash == f.hash {
+		g.Log().Debugf("return HashEquals Last:%s New:%s\n", lastHash, f.hash)
 		return nil, nil
 	}
 	// changed!
 	file, err := os.Open(f.Path)
 	if err != nil {
+		g.Log().Errorf("return OpenError %v\n", err)
 		return nil, err
 	}
 	//check every 1/4s for 5s to
@@ -62,6 +67,7 @@ func (f *File) Fetch() (io.Reader, error) {
 	for {
 		if attempt == total {
 			file.Close()
+			g.Log().Error("file is currently being changed")
 			return nil, errors.New("file is currently being changed")
 		}
 		attempt++
@@ -82,10 +88,14 @@ func (f *File) Fetch() (io.Reader, error) {
 }
 
 func (f *File) updateHash() error {
+	//fmt.Printf("UpdateHash\n")
+
 	file, err := os.Open(f.Path)
 	if err != nil {
 		//binary does not exist, skip
 		if os.IsNotExist(err) {
+			//fmt.Printf("IsNotExist\n")
+			g.Log().Error("File %s NotExist", f.Path)
 			return nil
 		}
 		return fmt.Errorf("Open file error: %s", err)
@@ -96,5 +106,7 @@ func (f *File) updateHash() error {
 		return fmt.Errorf("Get file stat error: %s", err)
 	}
 	f.hash = fmt.Sprintf("%d|%d", s.ModTime().UnixNano(), s.Size())
+	//fmt.Printf("FileHash:%s\n", f.hash)
+	g.Log().Debugf("FileHash %s", f.hash)
 	return nil
 }
