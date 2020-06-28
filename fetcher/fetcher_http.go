@@ -75,7 +75,7 @@ func (h *HTTP) Fetch() (io.Reader, error) {
 		}
 	}
 	if matches == total {
-		g.Log().Infof("Skip file match.")
+		//g.Log().Infof("Skip file match.")
 		return nil, nil //skip, file match
 	}
 	//binary fetch using GET

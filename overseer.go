@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/gogf/gf/frame/g"
 	"github.com/jpillora/overseer/fetcher"
 )
 
@@ -101,7 +102,7 @@ func Run(c Config) {
 		if c.Required {
 			log.Fatalf("[overseer] %s", err)
 		} else if c.Debug || !c.NoWarn {
-			log.Printf("[overseer] disabled. run failed: %s", err)
+			g.Log().Printf("[overseer] disabled. run failed: %s", err)
 		}
 		c.Program(DisabledState)
 		return

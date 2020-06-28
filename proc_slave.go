@@ -2,12 +2,13 @@ package overseer
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/signal"
 	"strconv"
 	"time"
+
+	"github.com/gogf/gf/frame/g"
 )
 
 var (
@@ -142,12 +143,12 @@ func (sp *slave) triggerRestart() {
 
 func (sp *slave) debugf(f string, args ...interface{}) {
 	if sp.Config.Debug {
-		log.Printf("[overseer slave#"+sp.id+"] "+f, args...)
+		g.Log().Printf("[overseer slave#"+sp.id+"] "+f, args...)
 	}
 }
 
 func (sp *slave) warnf(f string, args ...interface{}) {
 	if sp.Config.Debug || !sp.Config.NoWarn {
-		log.Printf("[overseer slave#"+sp.id+"] "+f, args...)
+		g.Log().Printf("[overseer slave#"+sp.id+"] "+f, args...)
 	}
 }

@@ -7,16 +7,18 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/gogf/gf/frame/g"
 )
 
 var tmpBinPath = filepath.Join(os.TempDir(), "overseer-"+token())
@@ -42,6 +44,10 @@ type master struct {
 
 func (mp *master) run() error {
 	mp.debugf("run")
+
+	//for windows,use app_path/temp to prevent blocked by anti-virus software.
+	tmpBinPath = mp.translateTempFile(tmpBinPath)
+
 	if err := mp.checkBinary(); err != nil {
 		return err
 	}
@@ -193,6 +199,18 @@ func (mp *master) fetchLoop() {
 	}
 }
 
+func (mp *master) translateTempFile(sPath string) string {
+	var sTempDir string = sPath
+
+	if runtime.GOOS == "windows" {
+		dir, errDir := filepath.Abs(filepath.Dir(os.Args[0]))
+		if errDir != nil {
+			return os.TempDir()
+		}
+		sTempDir = filepath.Join(dir, "overseer-"+token()+".exe")
+	}
+	return sTempDir
+}
 func (mp *master) fetch() {
 	if mp.restarting {
 		return //skip if restarting
@@ -220,6 +238,7 @@ func (mp *master) fetch() {
 	if closer, ok := reader.(io.Closer); ok {
 		defer closer.Close()
 	}
+
 	tmpBin, err := os.OpenFile(tmpBinPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		mp.warnf("failed to open temp binary: %s", err)
@@ -416,13 +435,13 @@ func (mp *master) fork() error {
 
 func (mp *master) debugf(f string, args ...interface{}) {
 	if mp.Config.Debug {
-		log.Printf("[overseer master] "+f, args...)
+		g.Log().Printf("[overseer master] "+f, args...)
 	}
 }
 
 func (mp *master) warnf(f string, args ...interface{}) {
 	if mp.Config.Debug || !mp.Config.NoWarn {
-		log.Printf("[overseer master] "+f, args...)
+		g.Log().Printf("[overseer master] "+f, args...)
 	}
 }
 

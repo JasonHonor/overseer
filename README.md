@@ -53,7 +53,7 @@ func main() {
 
 //prog(state) runs in a child process
 func prog(state overseer.State) {
-	log.Printf("app (%s) listening...", state.ID)
+	g.Log().Printf("app (%s) listening...", state.ID)
 	http.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "app (%s) says hello\n", state.ID)
 	}))
